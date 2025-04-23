@@ -308,4 +308,146 @@ For every (origin, destination) pair:
             7. External Event based: Eg: MGP interrupts the algo
         13. Time-out: Until 5 seconds (whether or not MSPs respond fully or partially or not at all)
 
+## API Documentation
+
+### Endpoint: `/stitch-trips`
+**Method:** POST
+
+**Description:**
+This endpoint accepts a Beckn protocol-compliant payload and returns multi-modal trip options stitched using the trip stitching algorithm.
+
+**Request Body:**
+```json
+{
+  "context": {
+    "max_iterations": 10,
+    "time_limit_ms": 5000,
+    "min_paths": 5
+  },
+  "message": {
+    "intent": {
+      "fulfillment": {
+        "start": {
+          "id": "start_id",
+          "gps": [12.9716, 77.5946],
+          "time": "2025-04-23T10:00:00",
+          "buffer": 10
+        },
+        "end": {
+          "id": "end_id",
+          "gps": [13.0827, 77.5877],
+          "time": "2025-04-23T12:00:00",
+          "buffer": 10
+        }
+      },
+      "optimization": {
+        "parameter": "cost"
+      }
+    },
+    "catalogs": [
+      {
+        "type": "ride-hailing",
+        "provider_id": "provider_1",
+        "services": [
+          {
+            "origin": "start_id",
+            "destination": "mid_id",
+            "distance": 10,
+            "duration": 0.5,
+            "cost": 100
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "context": {
+    ...existing context...
+  },
+  "message": {
+    "catalog": {
+      "trips": [
+        {
+          "id": "trip_id",
+          "fulfillment": {
+            "path": ["start_id", "mid_id", "end_id"],
+            "distance": {"value": 20, "unit": "km"},
+            "duration": {"value": 1.5, "unit": "hour"},
+            "transfers": 1
+          },
+          "price": {
+            "value": 200,
+            "currency": "INR"
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+### How to Run the API
+1. Install the required dependencies:
+   ```bash
+   pip install flask networkx numpy
+   ```
+2. Start the Flask server:
+   ```bash
+   python main.py
+   ```
+3. Use a tool like Postman or `curl` to send a POST request to `http://127.0.0.1:5000/stitch-trips` with the request body as shown above.
+
+### Example `curl` Command
+```bash
+curl -X POST http://127.0.0.1:5000/stitch-trips \
+-H "Content-Type: application/json" \
+-d '{
+  "context": {
+    "max_iterations": 10,
+    "time_limit_ms": 5000,
+    "min_paths": 5
+  },
+  "message": {
+    "intent": {
+      "fulfillment": {
+        "start": {
+          "id": "start_id",
+          "gps": [12.9716, 77.5946],
+          "time": "2025-04-23T10:00:00",
+          "buffer": 10
+        },
+        "end": {
+          "id": "end_id",
+          "gps": [13.0827, 77.5877],
+          "time": "2025-04-23T12:00:00",
+          "buffer": 10
+        }
+      },
+      "optimization": {
+        "parameter": "cost"
+      }
+    },
+    "catalogs": [
+      {
+        "type": "ride-hailing",
+        "provider_id": "provider_1",
+        "services": [
+          {
+            "origin": "start_id",
+            "destination": "mid_id",
+            "distance": 10,
+            "duration": 0.5,
+            "cost": 100
+          }
+        ]
+      }
+    ]
+  }
+}'
+
 
